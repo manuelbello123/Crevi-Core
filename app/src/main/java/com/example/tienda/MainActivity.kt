@@ -2,6 +2,7 @@ package com.example.tienda
 
 import android.graphics.Color
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -16,6 +17,11 @@ import com.example.tienda.core.ui.theme.TiendaTheme
 class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // App financiera: bloquea capturas de pantalla y oculta el contenido en la
+        // miniatura de "apps recientes" (protege saldos, login y datos de clientes).
+        // Como es single-Activity, este flag cubre todas las pantallas.
+        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+
         // Tema claro: barras transparentes con iconos OSCUROS (light style),
         // sin importar el modo del sistema.
         enableEdgeToEdge(

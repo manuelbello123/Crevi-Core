@@ -1,0 +1,77 @@
+<resources>
+    <string name="app_name">Crevi Core</string>
+
+    <!-- Errores de red / negocio (NetworkError.asUiText) -->
+    <string name="error_empty_fields">Completa todos los campos</string>
+    <string name="error_unauthorized">Tu sesión expiró o tu cuenta fue desactivada. Inicia sesión de nuevo</string>
+    <string name="error_forbidden">No tienes permiso para realizar esta acción</string>
+    <string name="error_not_found">Recurso no encontrado</string>
+    <string name="error_validation">Datos inválidos</string>
+    <string name="error_conflict">Conflicto con datos existentes</string>
+    <string name="error_business_rule">No se puede completar la operación</string>
+    <string name="error_too_many_requests">Demasiados intentos. Espera un momento e intenta de nuevo</string>
+    <string name="error_server">Error del servidor. Intenta más tarde</string>
+    <string name="error_timeout">Tiempo de espera agotado. Intenta de nuevo</string>
+    <string name="error_no_internet">Sin conexión a internet. Verifica tu red</string>
+    <string name="error_serialization">Respuesta inválida del servidor</string>
+    <string name="error_unknown">Error inesperado. Intenta más tarde</string>
+
+    <!-- Login -->
+    <string name="error_invalid_credentials">Usuario o contraseña incorrectos</string>
+    <string name="error_biometric_failed">No se pudo validar tu identidad. Usa tu contraseña</string>
+    <string name="error_biometric_credentials_changed">Tus datos cambiaron. Ingresa con tu contraseña</string>
+
+    <!-- Clientes -->
+    <string name="error_nombre_requerido">Ingresa el nombre del cliente</string>
+    <string name="error_password_requerido">La contraseña es obligatoria para el acceso a la app</string>
+    <string name="cliente_creado">Cliente creado</string>
+    <string name="cliente_actualizado">Cliente actualizado</string>
+    <string name="cliente_reasignado">Cliente reasignado</string>
+    <string name="cliente_estado_actualizado">Estado actualizado</string>
+    <string name="acceso_app_actualizado">Acceso a la app actualizado</string>
+
+    <!-- Usuarios -->
+    <string name="error_usuario_requerido">Completa el nombre y el usuario</string>
+    <string name="error_usuario_min">El usuario debe tener al menos 4 caracteres</string>
+    <string name="error_password_min">La contraseña debe tener al menos 8 caracteres</string>
+    <string name="error_sucursal_requerida">Selecciona la sucursal del gerente</string>
+    <string name="usuario_creado">Usuario creado</string>
+    <string name="usuario_actualizado">Usuario actualizado</string>
+    <string name="usuario_estado_actualizado">Estado actualizado</string>
+    <string name="usuario_reasignado">Sucursal actualizada</string>
+    <string name="password_reseteada">Contraseña restablecida</string>
+
+    <!-- Cobranza -->
+    <string name="error_monto_invalido">Ingresa un monto válido</string>
+    <string name="error_monto_supera_saldo">El monto no puede superar el saldo</string>
+    <string name="abono_registrado">Abono registrado</string>
+    <string name="devolucion_registrada">Devolución registrada</string>
+    <string name="movimiento_actualizado">Movimiento actualizado</string>
+    <string name="movimiento_eliminado">Movimiento eliminado</string>
+
+    <!-- Ventas -->
+    <string name="error_venta_sin_renglones">Agrega al menos un artículo</string>
+    <string name="error_mostrador_nombre">Ingresa el nombre para mostrador</string>
+    <string name="error_mostrador_solo_contado">Mostrador solo admite ventas de contado</string>
+    <string name="error_venta_cliente_requerido">Selecciona un cliente o usa mostrador</string>
+    <string name="error_venta_cuenta_requerida">Selecciona o abre una cuenta para el cliente</string>
+    <string name="error_renglon_invalido">Revisa descripción, cantidad y precio del artículo</string>
+    <string name="venta_creada">Venta registrada</string>
+    <string name="venta_consolidada">Venta consolidada</string>
+    <string name="venta_cancelada">Venta cancelada</string>
+    <string name="venta_renglones_actualizados">Artículos actualizados</string>
+    <string name="error_sucursal_nombre">Ingresa el nombre de la sucursal</string>
+    <string name="sucursal_creada">Sucursal creada</string>
+    <string name="sucursal_actualizada">Sucursal actualizada</string>
+    <string name="error_resumen">No se pudo cargar el resumen</string>
+    <string name="error_pass_actual_requerida">Ingresa tu contraseña actual</string>
+    <string name="error_pass_min">La nueva contraseña debe tener al menos 8 caracteres</string>
+    <string name="error_pass_igual_actual">La nueva contraseña debe ser distinta a la actual</string>
+    <string name="error_pass_no_coincide">La confirmación no coincide con la nueva contraseña</string>
+    <string name="password_actualizada">Contraseña actualizada. La huella se desactivó, actívala de nuevo si quieres usarla.</string>
+    <string name="biometrico_desactivado">Acceso con huella desactivado</string>
+    <string name="error_edicion_sin_credito">Una venta pendiente debe conservar al menos un artículo a crédito</string>
+    <string name="cuenta_abierta">Cuenta abierta</string>
+    <string name="cuenta_renombrada">Cuenta renombrada</string>
+    <string name="error_anticipo_supera">El anticipo no puede superar la deuda de la cuenta</string>
+</resources>

@@ -1,8 +1,18 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     //Plugin ktor
     alias(libs.plugins.kotlinxSerialization)
+}
+
+// Credenciales de firma de release, fuera del repo (keystore.properties está en
+// .gitignore). Si el archivo no existe (p.ej. CI sin secretos), releaseSigning
+// queda null y el release sale sin firmar en vez de romper la config.
+val keystorePropsFile = rootProject.file("keystore.properties")
+val keystoreProps = Properties().apply {
+    if (keystorePropsFile.exists()) keystorePropsFile.inputStream().use { load(it) }
 }
 
 android {
@@ -19,8 +29,21 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        if (keystorePropsFile.exists()) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProps.getProperty("storeFile"))
+                storePassword = keystoreProps.getProperty("storePassword")
+                keyAlias = keystoreProps.getProperty("keyAlias")
+                keyPassword = keystoreProps.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            // Firma con el keystore de release si hay credenciales; si no, unsigned.
+            signingConfig = signingConfigs.findByName("release")
             // R8: recorta código muerto, ofusca y optimiza el bytecode.
             isMinifyEnabled = true
             // Recorta además recursos no usados (requiere minify activo).

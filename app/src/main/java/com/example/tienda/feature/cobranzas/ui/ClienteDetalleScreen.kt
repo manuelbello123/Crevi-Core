@@ -48,6 +48,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -102,6 +103,8 @@ fun ClienteDetalle(state: CobranzasUiState, viewModel: CobranzasViewModel) {
     LaunchedEffect(state.mensaje) { if (state.mensaje != null) monto = "" }
 
     val saldoGlobal = state.cuentas.fold(BigDecimal.ZERO) { acc, c -> acc + c.saldo }
+    // Solo cuentas con saldo por cobrar (las pagadas cuentan 0 y no se listan en el hero).
+    val cuentasConSaldo = state.cuentas.count { it.saldo > BigDecimal.ZERO }
     val saldoCuenta = state.cuentaSeleccionada?.saldo ?: BigDecimal.ZERO
     // Para enlazar los renglones de cada movimiento de venta (concepto venta) por su ventaId.
     val ventasPorId = state.ventasCuenta.associateBy { it.id }
@@ -138,8 +141,8 @@ fun ClienteDetalle(state: CobranzasUiState, viewModel: CobranzasViewModel) {
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(20.dp),
                     ) {
-                        // Módulo 1: Hero con saldo TOTAL (todas las cuentas del cliente).
-                        item { SaldoTotalHero(saldo = saldoGlobal, numCuentas = state.cuentas.size) }
+                        // Módulo 1: Hero con saldo TOTAL (solo cuentas con saldo por cobrar).
+                        item { SaldoTotalHero(saldo = saldoGlobal, numCuentasConSaldo = cuentasConSaldo) }
 
                         // Módulo 2: Cuenta seleccionada — encabezado + selector estilo pill + card unificada (saldo + abono).
                         item {
@@ -286,7 +289,7 @@ private fun RenombrarCuentaDialog(state: CobranzasUiState, viewModel: CobranzasV
  * Fondo Primary + texto en OnPrimary para diferenciarlo del saldo por cuenta.
  */
 @Composable
-private fun SaldoTotalHero(saldo: BigDecimal, numCuentas: Int) {
+private fun SaldoTotalHero(saldo: BigDecimal, numCuentasConSaldo: Int) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -309,7 +312,11 @@ private fun SaldoTotalHero(saldo: BigDecimal, numCuentas: Int) {
         )
         Spacer(Modifier.height(4.dp))
         Text(
-            if (numCuentas == 1) "1 cuenta" else "$numCuentas cuentas",
+            when (numCuentasConSaldo) {
+                0 -> "Sin saldo pendiente"
+                1 -> "1 cuenta"
+                else -> "$numCuentasConSaldo cuentas"
+            },
             style = MaterialTheme.typography.labelMedium,
             color = OnPrimary.copy(alpha = 0.7f),
         )
@@ -366,38 +373,82 @@ private fun SelectorCuentas(
     onSelect: (Cuenta) -> Unit,
     onLongPress: (Cuenta) -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState()),
-    ) {
+    // Nombre estable por cuenta (índice del listado COMPLETO) para que "Cuenta 3"
+    // no se renombre al ocultar las pagadas.
+    val nombrePorId = remember(cuentas) {
+        cuentas.mapIndexed { i, c -> c.id to (c.nombre ?: "Cuenta ${i + 1}") }.toMap()
+    }
+    val conSaldo = cuentas.filter { it.saldo > BigDecimal.ZERO }
+    val pagadas = cuentas.filter { it.saldo <= BigDecimal.ZERO }
+    // El toggle solo aplica si hay mezcla (con saldo + pagadas) y más de una cuenta.
+    val toggleAplica = conSaldo.isNotEmpty() && pagadas.isNotEmpty() && cuentas.size > 1
+    var mostrarPagadas by rememberSaveable(cuentas.firstOrNull()?.clienteId) { mutableStateOf(false) }
+
+    // Visibles: con saldo siempre; la seleccionada (aunque esté pagada) para que la
+    // recién liquidada NO desaparezca de golpe; todas si el toggle no aplica o está activo.
+    val visibles = cuentas.filter { c ->
+        !toggleAplica || c.saldo > BigDecimal.ZERO || mostrarPagadas || c.id == seleccionadaId
+    }
+    val pagadasOcultas = if (toggleAplica && !mostrarPagadas) pagadas.count { it.id != seleccionadaId } else 0
+
+    Column {
         Row(
-            modifier = Modifier
-                .clip(TiendaShapes.Field)
-                .background(SurfaceMuted)
-                .padding(4.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
         ) {
-            cuentas.forEachIndexed { i, cuenta ->
-                val activa = cuenta.id == seleccionadaId
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(if (activa) Surface else androidx.compose.ui.graphics.Color.Transparent)
-                        .combinedClickable(
-                            onClick = { onSelect(cuenta) },
-                            onLongClick = { onLongPress(cuenta) },
+            Row(
+                modifier = Modifier
+                    .clip(TiendaShapes.Field)
+                    .background(SurfaceMuted)
+                    .padding(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                visibles.forEach { cuenta ->
+                    val activa = cuenta.id == seleccionadaId
+                    val pagada = cuenta.saldo <= BigDecimal.ZERO
+                    Column(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (activa) Surface else androidx.compose.ui.graphics.Color.Transparent)
+                            .combinedClickable(
+                                onClick = { onSelect(cuenta) },
+                                onLongClick = { onLongPress(cuenta) },
+                            )
+                            .padding(horizontal = 20.dp, vertical = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            nombrePorId[cuenta.id] ?: "Cuenta",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = when {
+                                activa -> Primary
+                                pagada -> TextSecondary.copy(alpha = 0.6f)
+                                else -> TextSecondary
+                            },
+                            fontWeight = FontWeight.SemiBold,
                         )
-                        .padding(horizontal = 20.dp, vertical = 10.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        cuenta.nombre ?: "Cuenta ${i + 1}",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = if (activa) Primary else TextSecondary,
-                        fontWeight = FontWeight.SemiBold,
-                    )
+                        if (pagada) {
+                            Text(
+                                "Pagada",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (activa) Accent else TextSecondary.copy(alpha = 0.6f),
+                            )
+                        }
+                    }
                 }
+            }
+        }
+        // TextButton para revelar/ocultar las cuentas pagadas (saldos pasados).
+        if (toggleAplica && (mostrarPagadas || pagadasOcultas > 0)) {
+            TextButton(
+                onClick = { mostrarPagadas = !mostrarPagadas },
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp),
+            ) {
+                Text(
+                    if (mostrarPagadas) "Ocultar cuentas pagadas" else "Ver cuentas pagadas ($pagadasOcultas)",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Primary,
+                    fontWeight = FontWeight.SemiBold,
+                )
             }
         }
     }

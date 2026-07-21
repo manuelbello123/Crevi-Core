@@ -76,6 +76,10 @@ class LoginViewModel(
      * Canjea el refresh token guardado por una sesión fresca (y guarda el token rotado).
      */
     fun loginWithBiometric() {
+        // Guarda de re-entrada: si ya hay un canje en curso, ignora. Evita que dos
+        // prompts casi-simultáneos (auto-prompt + tap) canjeen el MISMO refresh token
+        // dos veces → el backend detectaría reuso y revocaría todos los tokens.
+        if (_state.value.isLoading) return
         _state.update { it.copy(isLoading = true, errorMessage = null) }
         viewModelScope.launch {
             val token = credentialStore.token()
